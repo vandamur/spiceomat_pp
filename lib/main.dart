@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'services/bluetooth_service.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart' as fbp;
+import 'firstPage.dart'; // Import der FirstPage
 
 void main() {
   runApp(const MyApp());
@@ -13,9 +14,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Spiceomat',
-      theme: ThemeData(
-        primarySwatch: Colors.red,
-      ),
+      theme: ThemeData(primarySwatch: Colors.red),
       home: const MyHomePage(),
     );
   }
@@ -42,10 +41,10 @@ class _MyHomePageState extends State<MyHomePage> {
   void initState() {
     super.initState();
     _setupBluetoothListeners();
-    
+
     // Start scanning automatically
     _bluetooth.startScan();
-    
+
     // Stop scanning after 10 seconds
     Future.delayed(const Duration(seconds: 10), () {
       if (_isScanning && mounted) {
@@ -58,7 +57,6 @@ class _MyHomePageState extends State<MyHomePage> {
     _bluetooth.connectionState.listen((device) {
       setState(() {
         _connectedDevice = device;
-
       });
     });
 
@@ -116,7 +114,6 @@ class _MyHomePageState extends State<MyHomePage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: <Widget>[
-            
             if (_connectedDevice == null)
               const Padding(
                 padding: EdgeInsets.symmetric(vertical: 8.0),
@@ -127,7 +124,7 @@ class _MyHomePageState extends State<MyHomePage> {
             if (_connectedDevice != null) ...[
               TextField(
                 controller: _textController,
-                
+
                 decoration: const InputDecoration(
                   labelText: 'Enter text to send',
                   border: OutlineInputBorder(),
@@ -169,7 +166,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     onPressed: () {
                       _bluetooth.sendData("<1;$_targetWeight>");
                     },
-                    child: const Text('Start'),
+                    child: const Text('Test'),
                   ),
                   ElevatedButton(
                     onPressed: () {
@@ -185,31 +182,52 @@ class _MyHomePageState extends State<MyHomePage> {
                   ),
                 ],
               ),
-                          const SizedBox(height: 20),
-            Text(
-              'Current Weight:',
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-            Center(
-              child: Text(
-                _isTaring ? 'Taring...' : '$_receivedData g',
-                style: Theme.of(context).textTheme.headlineLarge,
+              const SizedBox(height: 20),
+              Text(
+                'Current Weight:',
+                style: Theme.of(context).textTheme.titleMedium,
               ),
-            ),
-            const SizedBox(height: 20),
-            if (_targetWeight > 0) ...[
-              LinearProgressIndicator(
-                value: _getCurrentWeight() / _targetWeight,
-                minHeight: 10,
-                backgroundColor: Colors.grey[300],
-                valueColor: const AlwaysStoppedAnimation<Color>(Colors.red),
+              Center(
+                child: Text(
+                  _isTaring ? 'Taring...' : '$_receivedData g',
+                  style: Theme.of(context).textTheme.headlineLarge,
+                ),
               ),
               const SizedBox(height: 20),
+              if (_targetWeight > 0) ...[
+                LinearProgressIndicator(
+                  value: _getCurrentWeight() / _targetWeight,
+                  minHeight: 10,
+                  backgroundColor: Colors.grey[300],
+                  valueColor: const AlwaysStoppedAnimation<Color>(Colors.red),
+                ),
+                const SizedBox(height: 20),
+              ],
             ],
-            ],
-
-
-
+            const Spacer(), // Fügt flexiblen Raum hinzu, um den Button nach unten zu schieben
+            Center(
+              // Zentriert den Button horizontal
+              child: ElevatedButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const FirstPage()),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 50,
+                    vertical: 15,
+                  ),
+                  backgroundColor: const Color.fromARGB(255, 135, 17, 9),
+                  foregroundColor: Colors.white,
+                ),
+                child: const Text('START', style: TextStyle(fontSize: 18)),
+              ),
+            ),
+            const SizedBox(
+              height: 20,
+            ), // Fügt etwas Abstand am unteren Rand hinzu
           ],
         ),
       ),
