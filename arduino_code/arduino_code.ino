@@ -1,241 +1,255 @@
+#include <ArduinoBLE.h>
 #include <HX711_ADC.h>
 
-int directionPin = 12;
-int pwmPin = 3;
-int brakePin = 9;
+// TODO:
+// 1. Add a function that decreases the motor speed slowly to 30%, when 80% of the target weight is reached.
+// 2. Add calibration process to the code.
 
-//HX711 related:
-const int HX711_dout = 4; //mcu > HX711 dout pin
-const int HX711_sck = 5; //mcu > HX711 sck pin
+// HX711 (scale) related
+const int HX711_dout = 4; // mcu > HX711 dout pin
+const int HX711_sck = 5;  // mcu > HX711 sck pin
 HX711_ADC LoadCell(HX711_dout, HX711_sck);
-const int calVal_eepromAdress = 0;
-unsigned long t = 0;
 float CURRENT_WEIGHT = 0.0;
+float calibrationValue = 0.0;
 
-//FrontEnd Related:
-int MOTOR_NR = 0;
-long MOTOR_SPEED = 100;
-float TARGET_WEIGHT = 0.0;
-int UNDEFINED_b = 0; 
+// FrontEnd Related:
+float TARGET_WEIGHT = -10.0;
+int TARGET_MOTOR_SPEED = 255; // currently hard coded to max speed
+bool spiceomat_is_running = false;
 
-// boolean to switch direction
-bool directionRight = true;
+// MOTOR related:
+int CURRENT_MOTOR_SPEED = 0;
+int pwmPin = 3;
 
-// Serial Data  Variables
-// SERIAL DATA STRING FORMAT <A,100,1,128> = <MOTOR_NR,MOTOR_SPEED,TARGET_WEIGHT,UNDEFINED_b>
-const byte numChars = 32;
-char receivedChars[numChars];
-char tempChars[numChars]; // temporary array for use when parsing
+int mode = 0;
+// mode 0 = stop motor
+// mode 1 = normal operation
+// mode 2 = tare scale (takes 2-3 seconds)
+// mode 3 = calibrate scale
 
+// --- Define BLE Service and Characteristics ---
+// Use the same UUIDs as in your Flutter app  (Nordic UART Service - NUS)
+BLEService uartService("6E400001-B5A3-F393-E0A9-E50E24DCCA9E");
 
-// boolean to check if new data (from serial / frontend) is available
-bool newDataFromFrontEnd = false;
+// Create TX Characteristic (Transmit from Flutter app to Arduino)
+BLECharacteristic txCharacteristic("6E400002-B5A3-F393-E0A9-E50E24DCCA9E",
+                                   BLEWriteWithoutResponse | BLEWrite, // Allow write properties
+                                   20);                                // Maximum data length (adjust if needed)
+
+// Create RX Characteristic (Flutter app receives data from Arduino)
+BLECharacteristic rxCharacteristic("6E400003-B5A3-F393-E0A9-E50E24DCCA9E",
+                                   BLERead | BLENotify, // Allow read and notify properties
+                                   20);                 // Maximum data length (adjust if needed)
 
 void setup()
 {
-    Serial.begin(9600); delay(50);
+  // Initialize Serial communication for debugging messages
+  Serial.begin(9600);
+  delay(100);
 
-    // ################################ Scale Startup
-    LoadCell.begin();
-    float calibrationValue; // 
-    calibrationValue = -17618.00; //With the container weight // Calibration Value must be generated via Calibration.ino
-    // calibrationValue = -17616.20; // Without container weight
-    unsigned long stabilizingtime = 2000; // preciscion right after power-up can be improved by adding a few seconds of stabilizing time
-    boolean _tare = true; //set this to false if you don't want tare to be performed in the next step
-    LoadCell.start(stabilizingtime, _tare);
-    if (LoadCell.getTareTimeoutFlag()) {
-        Serial.println("Timeout, check MCU>HX711 wiring and pin designations");
-        while (1);
-    }
-    else {
-        LoadCell.setCalFactor(calibrationValue); // set calibration value (float)
-        Serial.println("Scale Startup complete");
-  }
-  // ################################## Scale Startup END
-
+  setupScale();
+  setupBluetooth();
 }
 
+// --- Loop Function ---
 void loop()
 {
-    delay(100);
+  delay(50); // optional?
 
-    // ################################ Scale Related START
-    static boolean scaleDataReady = false;
-    if (LoadCell.update()) scaleDataReady = true;
-    // get smoothed value from the dataset:
-    if (scaleDataReady) {
-        CURRENT_WEIGHT = LoadCell.getData();
-        Serial.print("Aktuelles Gewicht: ");
-        Serial.print(CURRENT_WEIGHT);
-        Serial.print(" g ");
+  // Continuously poll for BLE events (connections, disconnections, data)
+  // This is CRUCIAL for the BLE stack to function.
+  BLE.poll();
 
-        Serial.print("Ziel-Gewicht: ");
-        Serial.print(TARGET_WEIGHT);
-        Serial.println(" g");
+  // ################################ MOTOR RELATED START
+  // If the current weight is above 0.4*TARGET_WEIGHT, slow down the motor to 50% of TARGET_MOTOR_SPEED
+  if (CURRENT_WEIGHT >= 0.4 * TARGET_WEIGHT && spiceomat_is_running == true)
+  {
+    // Slow down the motor to 50% of TARGET_MOTOR_SPEED
+    int newSpeed = TARGET_MOTOR_SPEED * 0.5;
+    startMotor(newSpeed);
+  }
 
-        scaleDataReady = false;
-    }
-    // ################################ Scale Related END
+  if (CURRENT_WEIGHT >= 0.9*TARGET_WEIGHT)
+  {
+    stopMotor();
+  }
+  if (CURRENT_WEIGHT < TARGET_WEIGHT && CURRENT_MOTOR_SPEED == 0 && spiceomat_is_running == true)
+  {
+    startMotor(TARGET_MOTOR_SPEED);
+  
+  }
+  // ################################ MOTOR RELATED END
 
-    // ################################ FRONTEND RELATED START
-    readDataFromSerial();
-    if (newDataFromFrontEnd == true)
-    {
-        strcpy(tempChars, receivedChars);
-        // this temporary copy is necessary to protect the original data
-        //   because strtok() used in parseData() replaces the commas with \0
-        parseData();
-        showParsedData();
-        newDataFromFrontEnd = false;
+  // ################################ Scale Related START
+  static boolean scaleDataReady = false;
+  if (LoadCell.update())
+    scaleDataReady = true;
+  // get smoothed value from the dataset:
+  if (scaleDataReady)
+  {
+    CURRENT_WEIGHT = LoadCell.getData();
+    scaleDataReady = false;
 
-        if (MOTOR_SPEED == 0)
-        {
-            stopMotor();
-        }
-        else
-        {
-            startMotor(MOTOR_SPEED);
-        }
+    // Send CURRENT_WEIGHT, which is already a String, to the RX characteristic
+    String weightString = String(CURRENT_WEIGHT);
+    rxCharacteristic.writeValue(weightString.c_str(), weightString.length());
 
-        
-        // Optional?
-        // serialEmpty();
-        memset(receivedChars, 0, sizeof(receivedChars));
-        //memset(MOTOR_NR, 0, sizeof(MOTOR_NR));
-    }
-
-    if (CURRENT_WEIGHT >= TARGET_WEIGHT){
-        stopMotor();
-    }
-    // ################################ FRONTEND RELATED END
+    // Print the weight to Serial Monitor for debugging
+    Serial.print("Weight: ");
+    Serial.print(CURRENT_WEIGHT);
+    Serial.println(" g");
+  }
+  // ################################ Scale Related END
 }
 
-void setMotorDirection()
+// --- Callback Function ---
+// This function is called when the flutter app sends data over Bluetooth
+void onFrontEndSentData(BLEDevice central, BLECharacteristic characteristic)
 {
-    if (MOTOR_SPEED <0){
-        directionRight = false;
-    } else {
-        directionRight = true;
-    }
 
-    // write a low state to the direction pin (13)
-    if (directionRight == false)
-    {
-        Serial.println("Direction = Left");
-        digitalWrite(directionPin, LOW);
-    }
+  // Get the data from flutter app via Bluetooth
+  int len = characteristic.valueLength();       // Get the length of the data received
+  const uint8_t *data = characteristic.value(); // Get a pointer to the data buffer
 
-    // write a high state to the direction pin (13)
-    else
-    {
-        Serial.println("Direction = Right");
-        digitalWrite(directionPin, HIGH);
-    }
+  // The incoming data is a String in the format "<mode;target_weight>" including the <> brackets
+  String incomingData = "";
+  for (int i = 0; i < len; i++)
+  {
+    incomingData += (char)data[i]; // Convert the data to a String
+  }
+  Serial.print("Received data: ");
+  Serial.println(incomingData);
+  // Parse the incoming data
+  int separatorIndex = incomingData.indexOf(';');
+  float recievedWeightParameter = 0.0; // Initialize the received weight parameter
+  if (separatorIndex != -1)
+  {
+    String modeString = incomingData.substring(1, separatorIndex); // Extract the mode
+    String targetWeightString = incomingData.substring(separatorIndex + 1, incomingData.length() - 1); // Extract the target weight
+
+    // Convert the strings to integers
+    mode = modeString.toInt();
+    recievedWeightParameter = targetWeightString.toFloat();
+    Serial.print("Recieved Mode: ");
+    Serial.println(mode);
+    Serial.print("Recieved Target Weight: ");
+    Serial.println(recievedWeightParameter);
+
+
+  }
+  else
+  {
+    Serial.println("Invalid data format received");
+  }
+  // Handle the mode
+  switch (mode)
+  {
+  case 0: // Stop motor
+    stopMotor();
+    break;
+  case 1: // Normal operation
+
+    TARGET_WEIGHT = recievedWeightParameter;
+    spiceomat_is_running = true;
+    break;
+  case 2: // Tare scale
+    Serial.println("Taring scale...");
+    LoadCell.tare(); // Tare the scale
+    Serial.println("Tare complete");
+    break;
+  case 3: // Calibrate scale
+    calibrateScale(recievedWeightParameter); // Call the calibration function
+    break;
+  default:
+    Serial.println("Invalid mode selected");
+    break;
+  }
 }
 
 void startMotor(int speed)
 {
-
-    // If speed is negative, make it positive
-    if (speed < 0)
-    {
-        speed = speed * -1;
-    }
-    
-    Serial.println("Starting motor with speed: " + String(speed));
-    // release breaks
-    digitalWrite(brakePin, LOW);
-
-    // set work duty for the motor
-    analogWrite(pwmPin, speed);
+  // set work duty for the motor
+  analogWrite(pwmPin, speed);
+  CURRENT_MOTOR_SPEED = speed;
 }
 
 void stopMotor()
 {
-    Serial.println("Stopping motor");
-    // activate breaks
-    digitalWrite(brakePin, HIGH);
-
-    // set work duty for the motor to 0 (off)
-    analogWrite(pwmPin, 0);
+  // set work duty for the motor to 0 (off)
+  analogWrite(pwmPin, 0);
+  CURRENT_MOTOR_SPEED = 0;
+  spiceomat_is_running = false; // Reset the flag to prevent immediate restart
 }
 
-void readDataFromSerial()
-{ // Recieves Serial Data from Matlab or similar
-    static bool recvInProgress = false;
-    static byte ndx = 0;
-    char startMarker = '<';
-    char endMarker = '>';
-    char rc;
+void setupScale()
+{
+  LoadCell.begin();
 
-    while (Serial.available() > 0 && newDataFromFrontEnd == false)
-    {
-        rc = Serial.read();
+  calibrationValue = -17618.00; // should not be hard coded, but calibrated every startup
 
-        if (recvInProgress == true)
-        {
-            if (rc != endMarker)
-            {
-                receivedChars[ndx] = rc;
-                ndx++;
-                if (ndx >= numChars)
-                {
-                    ndx = numChars - 1;
-                }
-            }
-            else
-            {
-                receivedChars[ndx] = '\0'; // terminate the string
-                recvInProgress = false;
-                ndx = 0;
-                newDataFromFrontEnd = true;
-            }
-        }
-
-        else if (rc == startMarker)
-        {
-            recvInProgress = true;
-        }
-    }
+  unsigned long stabilizingtime = 2000; // precision right after power-up can be improved by adding a few seconds of stabilizing time
+  boolean _tare = true;                 // set this to false if you don't want tare to be performed in the next step
+  LoadCell.start(stabilizingtime, _tare);
+  if (LoadCell.getTareTimeoutFlag())
+  {
+    Serial.println("Timeout, check MCU>HX711 wiring and pin designations");
+    while (1)
+      ;
+  }
+  else
+  {
+    LoadCell.setCalFactor(calibrationValue); // set calibration value (float)
+    Serial.println("Scale Startup complete");
+  }
 }
 
-void parseData()
-{ // split the data into its parts
+void calibrateScale(float known_mass)
+{
+  Serial.println(" Calibration not implemented yet");
+  Serial.print("known_mass: ");
+  Serial.println(known_mass);
+  // Serial.println("Starting calibration...");
 
-    char *strtokIndx; // this is used by strtok() as an index
+  // delay(2000);
+  // float known_mass = 10.0; // known calibration mass in grams
+  // LoadCell.tare();
+  //   //place known mass
+  // LoadCell.refreshDataSet(); //refresh the dataset to be sure that the known mass is measured correct
+  // float newCalibrationValue = LoadCell.getNewCalibration(known_mass); //get the new calibration value
 
-    // 1st part of the Data, a STRING, a MOTOR_NR chooser (switch case)
-    strtokIndx = strtok(tempChars, ","); // get the first part - the string
-    MOTOR_NR = atoi(strtokIndx);             // copy it to MOTOR_NR
-
-    // 2nd part of the Data, datatype LONG for the LED_duration
-    strtokIndx = strtok(NULL, ",");  // this continues where the previous call left off
-    MOTOR_SPEED = atol(strtokIndx); // convert this part to an integer
-
-    // 3rd part of the Data, datatype FLOAT for the TARGET_WEIGHT
-    strtokIndx = strtok(NULL, ",");  // this continues where the previous call left off
-    TARGET_WEIGHT = atof(strtokIndx); // convert this part to float
-
-    // 4th part of the Data, datatype INTEGER for the UNDEFINED_b
-    strtokIndx = strtok(NULL, ","); // this continues where the previous call left off
-    int tmp = atoi(strtokIndx);     // convert this part to an integer
-    if (tmp == UNDEFINED_b)
-    {
-    }
-    else
-    {
-        UNDEFINED_b = tmp;
-    }
+  // Serial.print("New calibration value: ");
+  // Serial.println(newCalibrationValue);
+  // calibrationValue = newCalibrationValue; // Store the calibration value for later use
 }
 
-void showParsedData()
-{ // Shows the recieved Data
-    Serial.print("MOTOR_NR: ");
-    Serial.println(MOTOR_NR);
-    Serial.print("MOTOR_SPEED: ");
-    Serial.println(MOTOR_SPEED);
-    Serial.print("TARGET_WEIGHT: ");
-    Serial.println(TARGET_WEIGHT);
-    // Serial.print("UNDEFINED_b: ");
-    // Serial.println(UNDEFINED_b);
+void setupBluetooth()
+{
+  // Initialize the BLE library
+  if (!BLE.begin())
+  {
+    Serial.println("Starting BLE failed!");
+    // Don't continue execution if BLE initialization fails
+    while (1)
+      ;
+  }
+
+  Serial.println("BLE Initialized");
+
+  // Set the advertised local name and service UUID
+  BLE.setLocalName("Spiceomat"); // Name that appears during scanning
+  BLE.setAdvertisedService(uartService);
+
+  // Add the characteristics to the service
+  uartService.addCharacteristic(txCharacteristic);
+  uartService.addCharacteristic(rxCharacteristic);
+
+  // Add the service to the BLE stack
+  BLE.addService(uartService);
+
+  // Assign a callback function when data is written to the TX characteristic
+  txCharacteristic.setEventHandler(BLEWritten, onFrontEndSentData);
+
+  // Start advertising
+  BLE.advertise();
+  Serial.println("Bluetooth device active, waiting for connections...");
 }
