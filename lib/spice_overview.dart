@@ -76,7 +76,9 @@ class _SpiceOverviewState extends State<SpiceOverview> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Padding(
-              padding: EdgeInsets.only(bottom: 16.0),
+              padding: EdgeInsets.only(
+                bottom: 0.0,
+              ), // Abstand verringert (vorher 2.0)
               child: Center(
                 child: Text(
                   'Wähle dein Gewürz aus',
@@ -91,8 +93,8 @@ class _SpiceOverviewState extends State<SpiceOverview> {
             Expanded(
               child: GridView.count(
                 crossAxisCount: 3,
-                crossAxisSpacing: 16.0,
-                mainAxisSpacing: 16.0,
+                crossAxisSpacing: 4.0, // Verringerter Abstand (vorher 6.0)
+                mainAxisSpacing: 4.0, // Verringerter Abstand (vorher 6.0)
                 children: <Widget>[
                   _buildSpiceCard(
                     context,

@@ -98,81 +98,107 @@ class _WeightSelectionPageState extends State<WeightSelectionPage> {
               ),
             ),
 
-            const SizedBox(height: 10), // Reduzierter Abstand
-            // Gewürzname
-            Text(
-              widget.spiceName,
-              style: Theme.of(
-                context,
-              ).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
-              textAlign: TextAlign.center,
-            ),
+            const SizedBox(height: 10), // Abstand von 20 auf 10 reduziert
 
-            const SizedBox(height: 10), // Reduzierter Abstand
-            // Bild des Gewürzes
-            Image.asset(
-              widget.imagePath,
-              height: 90, // Etwas reduzierte Höhe
-              width: 90, // Etwas reduzierte Breite
-              fit: BoxFit.contain,
-              errorBuilder:
-                  (context, error, stackTrace) => const Icon(
-                    Icons.image_not_supported,
-                    size: 90,
-                    color: Colors.grey,
+            // Hauptinhalt: Links Gewürz-Info, rechts Mengenauswahl
+            Expanded(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Linke Seite: Gewürzname und Bild
+                  Expanded(
+                    flex: 1,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        // Gewürzname
+                        Text(
+                          widget.spiceName,
+                          style: Theme.of(context).textTheme.headlineMedium
+                              ?.copyWith(fontWeight: FontWeight.bold),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 20),
+                        // Bild des Gewürzes
+                        Image.asset(
+                          widget.imagePath,
+                          height: 120,
+                          width: 120,
+                          fit: BoxFit.contain,
+                          errorBuilder:
+                              (context, error, stackTrace) => const Icon(
+                                Icons.image_not_supported,
+                                size: 120,
+                                color: Colors.grey,
+                              ),
+                        ),
+                      ],
+                    ),
                   ),
+
+                  // Trennlinie zwischen linker und rechter Seite
+                  Container(
+                    width: 1,
+                    height: double.infinity,
+                    color: Colors.grey[300],
+                    margin: const EdgeInsets.symmetric(horizontal: 16),
+                  ),
+
+                  // Rechte Seite: Mengenauswahl
+                  Expanded(
+                    flex: 2,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        // Mengensteuerung
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            IconButton(
+                              icon: const Icon(Icons.remove),
+                              onPressed: _decreaseQuantity,
+                              iconSize: 32,
+                            ),
+                            const SizedBox(width: 20),
+                            Text(
+                              "${_selectedQuantity}g",
+                              style: Theme.of(context).textTheme.headlineLarge,
+                            ),
+                            const SizedBox(width: 20),
+                            IconButton(
+                              icon: const Icon(Icons.add),
+                              onPressed: _increaseQuantity,
+                              iconSize: 32,
+                            ),
+                          ],
+                        ),
+
+                        const SizedBox(height: 30),
+
+                        // Mengenoptionen
+                        Wrap(
+                          spacing: 10.0,
+                          runSpacing: 10.0,
+                          alignment: WrapAlignment.center,
+                          children:
+                              widget.availableQuantities.map((quantity) {
+                                return ChoiceChip(
+                                  label: Text("${quantity}g"),
+                                  selected: _selectedQuantity == quantity,
+                                  onSelected: (selected) {
+                                    if (selected) {
+                                      _selectQuantity(quantity);
+                                    }
+                                  },
+                                );
+                              }).toList(),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
-
-            const SizedBox(height: 10), // Reduzierter Abstand
-            // Mengensteuerung
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.remove),
-                  onPressed: _decreaseQuantity,
-                  iconSize: 32,
-                ),
-
-                const SizedBox(width: 20),
-
-                Text(
-                  "${_selectedQuantity}g",
-                  style: Theme.of(context).textTheme.headlineLarge,
-                ),
-
-                const SizedBox(width: 20),
-
-                IconButton(
-                  icon: const Icon(Icons.add),
-                  onPressed: _increaseQuantity,
-                  iconSize: 32,
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 40),
-
-            // Mengenoptionen
-            Wrap(
-              spacing: 10.0,
-              runSpacing: 10.0,
-              alignment: WrapAlignment.center,
-              children:
-                  widget.availableQuantities.map((quantity) {
-                    return ChoiceChip(
-                      label: Text("${quantity}g"),
-                      selected: _selectedQuantity == quantity,
-                      onSelected: (selected) {
-                        if (selected) {
-                          _selectQuantity(quantity);
-                        }
-                      },
-                    );
-                  }).toList(),
-            ),
-
-            const Spacer(),
 
             // Buttons für Navigation (zurück zur Übersicht und weiter)
             Padding(
@@ -218,7 +244,7 @@ class _WeightSelectionPageState extends State<WeightSelectionPage> {
               ),
             ),
 
-            const SizedBox(height: 10), // Reduzierter Abstand am Ende
+            const SizedBox(height: 10),
           ],
         ),
       ),
