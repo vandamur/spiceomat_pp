@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'weight_selection_page.dart';
+import 'spice_unavailable_page.dart';
 
 class FirstPage extends StatefulWidget {
   const FirstPage({super.key});
@@ -33,13 +35,21 @@ class _FirstPageState extends State<FirstPage> {
   // Funktion zum Navigieren zur nächsten Seite oder zur "Nicht verfügbar"-Seite
   void _selectSpice(BuildContext context, String spiceName, bool isAvailable) {
     if (isAvailable) {
-      // TODO: Navigiere zur Mengenauswahl-Seite für verfügbare Gewürze
-      print('Selected available spice: $spiceName');
-      // Navigator.push(context, MaterialPageRoute(builder: (context) => QuantitySelectionPage(spiceName: spiceName)));
+      // Navigation zur Mengenauswahl-Seite für verfügbare Gewürze
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => WeightSelectionPage(spiceName: spiceName),
+        ),
+      );
     } else {
-      // TODO: Navigiere zur "Nicht verfügbar"-Seite
-      print('Selected unavailable spice: $spiceName');
-      // Navigator.push(context, MaterialPageRoute(builder: (context) => SpiceUnavailablePage(spiceName: spiceName)));
+      // Navigation zur "Nicht verfügbar"-Seite
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => SpiceUnavailablePage(spiceName: spiceName),
+        ),
+      );
     }
   }
 
@@ -57,7 +67,7 @@ class _FirstPageState extends State<FirstPage> {
                 child: Text(
                   'Wähle dein Gewürz aus',
                   style: TextStyle(
-                    fontSize: 24,
+                    fontSize: 34,
                     fontWeight: FontWeight.bold,
                     color: Color.fromARGB(255, 135, 17, 9),
                   ),
@@ -110,10 +120,16 @@ class _FirstPageState extends State<FirstPage> {
           children: <Widget>[
             Expanded(
               child: Container(
-                color: Colors.brown[400], // Beispiel-Hintergrundfarbe
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(15.0),
+                  color:
+                      isAvailable
+                          ? const Color.fromARGB(79, 43, 20, 0)
+                          : const Color.fromARGB(79, 43, 20, 40),
+                ),
                 child: Image.asset(
                   imagePath,
-                  fit: BoxFit.cover,
+                  fit: BoxFit.contain,
                   errorBuilder:
                       (context, error, stackTrace) => Center(
                         child: Text('Bild\n$name', textAlign: TextAlign.center),

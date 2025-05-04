@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'services/bluetooth_service.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart' as fbp;
-import 'firstPage.dart'; // Import der FirstPage
+import 'first_page.dart';
 
 void main() {
   runApp(const MyApp());
