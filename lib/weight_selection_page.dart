@@ -5,11 +5,13 @@ import 'confirmation_page.dart';
 class WeightSelectionPage extends StatefulWidget {
   final String spiceName;
   final String imagePath;
+  final List<int> availableQuantities;
 
   const WeightSelectionPage({
     super.key,
     required this.spiceName,
     required this.imagePath,
+    this.availableQuantities = const [2, 3, 6, 9], // Standardwerte
   });
 
   @override
@@ -17,11 +19,17 @@ class WeightSelectionPage extends StatefulWidget {
 }
 
 class _WeightSelectionPageState extends State<WeightSelectionPage> {
-  String _selectedAmount = '2g'; // Standardwert
+  late int _selectedQuantity;
 
   @override
   void initState() {
     super.initState();
+    // Standardwert auf den ersten verfügbaren Wert setzen
+    _selectedQuantity =
+        widget.availableQuantities.isNotEmpty
+            ? widget.availableQuantities[0]
+            : 2;
+
     // Querformat beibehalten
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.landscapeLeft,
@@ -36,13 +44,29 @@ class _WeightSelectionPageState extends State<WeightSelectionPage> {
     super.dispose();
   }
 
-  void _selectAmount(String amount) {
+  void _selectQuantity(int quantity) {
     setState(() {
-      _selectedAmount = amount;
+      _selectedQuantity = quantity;
     });
   }
 
-  void _proceedToNextStep(BuildContext context) {
+  void _increaseQuantity() {
+    setState(() {
+      if (_selectedQuantity < 100) {
+        _selectedQuantity += 1;
+      }
+    });
+  }
+
+  void _decreaseQuantity() {
+    setState(() {
+      if (_selectedQuantity > 1) {
+        _selectedQuantity -= 1;
+      }
+    });
+  }
+
+  void _proceed() {
     // Navigation zur Bestätigungsseite
     Navigator.push(
       context,
@@ -50,7 +74,7 @@ class _WeightSelectionPageState extends State<WeightSelectionPage> {
         builder:
             (context) => ConfirmationPage(
               spiceName: widget.spiceName,
-              selectedAmount: _selectedAmount,
+              selectedAmount: "${_selectedQuantity}g",
             ),
       ),
     );
@@ -60,129 +84,144 @@ class _WeightSelectionPageState extends State<WeightSelectionPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Padding(
-        padding: const EdgeInsets.all(12.0),
+        padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
+            // Überschrift "Menge auswählen"
             const Text(
               'Menge auswählen',
               style: TextStyle(
-                fontSize: 34,
+                fontSize: 28,
                 fontWeight: FontWeight.bold,
                 color: Color.fromARGB(255, 135, 17, 9),
               ),
             ),
-            const SizedBox(height: 20),
 
-            // Bild des Gewürzes einfügen
+            const SizedBox(height: 10), // Reduzierter Abstand
+            // Gewürzname
+            Text(
+              widget.spiceName,
+              style: Theme.of(
+                context,
+              ).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
+              textAlign: TextAlign.center,
+            ),
+
+            const SizedBox(height: 10), // Reduzierter Abstand
+            // Bild des Gewürzes
             Image.asset(
               widget.imagePath,
-              height: 80,
+              height: 90, // Etwas reduzierte Höhe
+              width: 90, // Etwas reduzierte Breite
               fit: BoxFit.contain,
               errorBuilder:
                   (context, error, stackTrace) => const Icon(
                     Icons.image_not_supported,
-                    size: 80,
+                    size: 90,
                     color: Colors.grey,
                   ),
             ),
 
-            const SizedBox(height: 20),
-
-            // Mengenauswahl-Buttons
+            const SizedBox(height: 10), // Reduzierter Abstand
+            // Mengensteuerung
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                _buildAmountButton('2g'),
-                const SizedBox(width: 15),
-                _buildAmountButton('3g'),
-                const SizedBox(width: 15),
-                _buildAmountButton('6g'),
-                const SizedBox(width: 15),
-                _buildAmountButton('9g'),
+                IconButton(
+                  icon: const Icon(Icons.remove),
+                  onPressed: _decreaseQuantity,
+                  iconSize: 32,
+                ),
+
+                const SizedBox(width: 20),
+
+                Text(
+                  "${_selectedQuantity}g",
+                  style: Theme.of(context).textTheme.headlineLarge,
+                ),
+
+                const SizedBox(width: 20),
+
+                IconButton(
+                  icon: const Icon(Icons.add),
+                  onPressed: _increaseQuantity,
+                  iconSize: 32,
+                ),
               ],
             ),
 
-            const SizedBox(height: 30),
+            const SizedBox(height: 40),
 
-            // Plus-Symbol
-            const Icon(
-              Icons.add_circle_outline,
-              size: 60,
-              color: Color.fromARGB(255, 135, 17, 9),
-            ),
-
-            const SizedBox(height: 10),
-
-            // Produktname
-            Text(
-              widget.spiceName,
-              style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+            // Mengenoptionen
+            Wrap(
+              spacing: 10.0,
+              runSpacing: 10.0,
+              alignment: WrapAlignment.center,
+              children:
+                  widget.availableQuantities.map((quantity) {
+                    return ChoiceChip(
+                      label: Text("${quantity}g"),
+                      selected: _selectedQuantity == quantity,
+                      onSelected: (selected) {
+                        if (selected) {
+                          _selectQuantity(quantity);
+                        }
+                      },
+                    );
+                  }).toList(),
             ),
 
             const Spacer(),
 
-            // Buttons-Reihe (zurück und weiter)
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                // Zurück-Button
-                ElevatedButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.grey[400],
-                    foregroundColor: Colors.black87,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 30,
-                      vertical: 15,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(25),
+            // Buttons für Navigation (zurück zur Übersicht und weiter)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 40.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // Zurück zur Übersicht-Button
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                      },
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 15,
+                        ),
+                        backgroundColor: Colors.grey[400],
+                        foregroundColor: Colors.black87,
+                      ),
+                      child: const Text('zurück zur Übersicht'),
                     ),
                   ),
-                  child: const Text('zurück', style: TextStyle(fontSize: 18)),
-                ),
 
-                // Weiter-Button
-                ElevatedButton(
-                  onPressed: () => _proceedToNextStep(context),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF4CAF50), // Grün
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 40,
-                      vertical: 15,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(25),
+                  const SizedBox(width: 20), // Abstand zwischen den Buttons
+                  // Weiter-Button
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: _proceed,
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 15,
+                        ),
+                        backgroundColor: const Color(0xFF4CAF50), // Grün
+                        foregroundColor: Colors.white,
+                      ),
+                      child: const Text('weiter'),
                     ),
                   ),
-                  child: const Text('weiter', style: TextStyle(fontSize: 18)),
-                ),
-              ],
+                ],
+              ),
             ),
+
+            const SizedBox(height: 10), // Reduzierter Abstand am Ende
           ],
         ),
       ),
-    );
-  }
-
-  Widget _buildAmountButton(String amount) {
-    return ElevatedButton(
-      onPressed: () => _selectAmount(amount),
-      style: ElevatedButton.styleFrom(
-        backgroundColor:
-            _selectedAmount == amount
-                ? const Color(0xFF4CAF50) // Grün
-                : const Color(0xFFE0E0E0), // Grau
-        foregroundColor:
-            _selectedAmount == amount ? Colors.white : Colors.black,
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-      ),
-      child: Text(amount, style: const TextStyle(fontSize: 16)),
     );
   }
 }

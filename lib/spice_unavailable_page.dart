@@ -46,11 +46,6 @@ class _SpiceUnavailablePageState extends State<SpiceUnavailablePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.spiceName),
-        backgroundColor: const Color.fromARGB(255, 135, 17, 9),
-        foregroundColor: Colors.white,
-      ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Center(
