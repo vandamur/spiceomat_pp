@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'weight_selection_page.dart';
+import 'grindscreen.dart';
 
 class ConfirmationPage extends StatefulWidget {
   final String spiceName;
@@ -39,11 +40,16 @@ class _ConfirmationPageState extends State<ConfirmationPage> {
   }
 
   void _containerPlaced(BuildContext context) {
-    // TODO: Implementiere die Aktion, wenn das Gefäß platziert wurde
-    print(
-      'Container placed for ${widget.spiceName}, amount: ${widget.selectedAmount}',
+    // Navigation zum Mahlvorgang
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => GrindScreen(
+          spiceName: widget.spiceName,
+          selectedAmount: widget.selectedAmount,
+        ),
+      ),
     );
-    // Hier könnte später die Kommunikation mit dem Arduino oder die Navigation zur nächsten Seite erfolgen
   }
 
   @override
