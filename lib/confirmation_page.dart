@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'dart:async';
 import 'weight_selection_page.dart';
 import 'grindscreen.dart';
+import 'services/bluetooth_service.dart';
 
 class ConfirmationPage extends StatefulWidget {
   final String spiceName;
@@ -18,6 +20,10 @@ class ConfirmationPage extends StatefulWidget {
 }
 
 class _ConfirmationPageState extends State<ConfirmationPage> {
+  // BluetoothService Instanz
+  final BluetoothService _bluetoothService = BluetoothService();
+  bool _isProcessing = false;
+
   @override
   void initState() {
     super.initState();
@@ -35,21 +41,73 @@ class _ConfirmationPageState extends State<ConfirmationPage> {
     super.dispose();
   }
 
+  // Konvertiert den String der ausgewählten Menge in einen double-Wert
+  double _getTargetWeight() {
+    // Entfernt das 'g' vom Ende und konvertiert in einen Double
+    String numericPart = widget.selectedAmount.replaceAll('g', '');
+    return double.parse(numericPart);
+  }
+
   void _backToWeightSelection(BuildContext context) {
     Navigator.pop(context);
   }
 
-  void _containerPlaced(BuildContext context) {
-    // Navigation zum Mahlvorgang
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => GrindScreen(
-          spiceName: widget.spiceName,
-          selectedAmount: widget.selectedAmount,
+  Future<void> _containerPlaced(BuildContext context) async {
+    // Vermeide mehrfaches Klicken während der Verarbeitung
+    if (_isProcessing) return;
+
+    setState(() {
+      _isProcessing = true;
+    });
+
+    try {
+      // Sende den TARE-Befehl über Bluetooth
+      await _bluetoothService.sendData("TARE");
+
+      // Zeige einen Indikator, dass die Waage tariert wird
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Waage wird tariert...'),
+          duration: Duration(seconds: 1),
         ),
-      ),
-    );
+      );
+
+      // Warte 2 Sekunden
+      await Future.delayed(const Duration(seconds: 2));
+
+      // Prüfe, ob die Seite noch montiert ist, bevor wir weitermachen
+      if (!mounted) return;
+
+      // Navigation zum Mahlvorgang mit Zielgewicht
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder:
+              (context) => GrindScreen(
+                spiceName: widget.spiceName,
+                selectedAmount: widget.selectedAmount,
+                targetWeight: _getTargetWeight(),
+              ),
+        ),
+      );
+    } catch (e) {
+      // Bei Fehler eine Nachricht anzeigen
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Fehler beim Tarieren: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      // Stelle sicher, dass der Verarbeitungsstatus zurückgesetzt wird
+      if (mounted) {
+        setState(() {
+          _isProcessing = false;
+        });
+      }
+    }
   }
 
   @override

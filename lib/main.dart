@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'services/bluetooth_service.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart' as fbp;
-import 'first_page.dart';
+import 'spice_overview.dart';
 
 void main() {
   runApp(const MyApp());
@@ -105,12 +105,8 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Spiceomat', style: TextStyle(color: Colors.white)),
-        backgroundColor: const Color.fromARGB(255, 135, 17, 9),
-      ),
       body: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(32.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: <Widget>[
@@ -158,7 +154,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   ),
                 ],
               ),
-              const SizedBox(height: 10),
+
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
@@ -182,7 +178,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   ),
                 ],
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 10),
               Text(
                 'Current Weight:',
                 style: Theme.of(context).textTheme.titleMedium,
@@ -193,7 +189,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   style: Theme.of(context).textTheme.headlineLarge,
                 ),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 10),
               if (_targetWeight > 0) ...[
                 LinearProgressIndicator(
                   value: _getCurrentWeight() / _targetWeight,
@@ -211,7 +207,9 @@ class _MyHomePageState extends State<MyHomePage> {
                 onPressed: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => const FirstPage()),
+                    MaterialPageRoute(
+                      builder: (context) => const SpiceOverview(),
+                    ),
                   );
                 },
                 style: ElevatedButton.styleFrom(

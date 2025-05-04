@@ -1,11 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'first_page.dart';
+import 'spice_overview.dart';
 
 class SpiceUnavailablePage extends StatefulWidget {
   final String spiceName;
+  final String imagePath;
 
-  const SpiceUnavailablePage({super.key, required this.spiceName});
+  const SpiceUnavailablePage({
+    super.key,
+    required this.spiceName,
+    required this.imagePath,
+  });
 
   @override
   State<SpiceUnavailablePage> createState() => _SpiceUnavailablePageState();
@@ -31,10 +36,11 @@ class _SpiceUnavailablePageState extends State<SpiceUnavailablePage> {
 
   // Funktion zum Zurückkehren zur Übersicht
   void _goBackToOverview(BuildContext context) {
-    // TODO: Implementiere die Navigation zurück zur Gewürzauswahl
+    // Navigation zurück zur Gewürzauswahl
     print('Going back to overview');
-    Navigator.pop(context); // Beispiel: Einfach zurück
-    // Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context) => FirstPage()), (route) => false); // Beispiel: Zurück zur Startseite
+    Navigator.pop(context); // Einfach zurück zur vorherigen Seite
+    // Alternative: Zurück zur Startseite
+    // Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context) => SpiceOverview()), (route) => false);
   }
 
   @override
@@ -53,7 +59,7 @@ class _SpiceUnavailablePageState extends State<SpiceUnavailablePage> {
             children: <Widget>[
               // TODO: Bild des Gewürzes einfügen
               Image.asset(
-                'assets/${widget.spiceName.toLowerCase()}.png',
+                widget.imagePath,
                 height: 150,
                 errorBuilder:
                     (context, error, stackTrace) => const Icon(
@@ -62,20 +68,20 @@ class _SpiceUnavailablePageState extends State<SpiceUnavailablePage> {
                       color: Colors.grey,
                     ),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 10),
               Text(
                 widget.spiceName,
                 style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 10),
               const Text(
                 'Oops, das gewählte Gewürz ist momentan nicht verfügbar.',
                 textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 18),
               ),
-              const SizedBox(height: 40),
+              const SizedBox(height: 10),
               ElevatedButton(
                 onPressed: () => _goBackToOverview(context),
                 style: ElevatedButton.styleFrom(

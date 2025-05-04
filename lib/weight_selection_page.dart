@@ -4,8 +4,13 @@ import 'confirmation_page.dart';
 
 class WeightSelectionPage extends StatefulWidget {
   final String spiceName;
+  final String imagePath;
 
-  const WeightSelectionPage({super.key, required this.spiceName});
+  const WeightSelectionPage({
+    super.key,
+    required this.spiceName,
+    required this.imagePath,
+  });
 
   @override
   State<WeightSelectionPage> createState() => _WeightSelectionPageState();
@@ -55,7 +60,7 @@ class _WeightSelectionPageState extends State<WeightSelectionPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Padding(
-        padding: const EdgeInsets.all(24.0),
+        padding: const EdgeInsets.all(12.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
@@ -71,7 +76,7 @@ class _WeightSelectionPageState extends State<WeightSelectionPage> {
 
             // Bild des Gewürzes einfügen
             Image.asset(
-              'assets/${widget.spiceName.toLowerCase()}.png',
+              widget.imagePath,
               height: 80,
               fit: BoxFit.contain,
               errorBuilder:
@@ -107,7 +112,7 @@ class _WeightSelectionPageState extends State<WeightSelectionPage> {
               color: Color.fromARGB(255, 135, 17, 9),
             ),
 
-            const SizedBox(height: 20),
+            const SizedBox(height: 10),
 
             // Produktname
             Text(

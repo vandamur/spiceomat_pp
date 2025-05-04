@@ -1,16 +1,17 @@
+// filepath: /Users/vandamuradyan/development/spiceomat_pp/lib/spice_overview.dart
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'weight_selection_page.dart';
 import 'spice_unavailable_page.dart';
 
-class FirstPage extends StatefulWidget {
-  const FirstPage({super.key});
+class SpiceOverview extends StatefulWidget {
+  const SpiceOverview({super.key});
 
   @override
-  State<FirstPage> createState() => _FirstPageState();
+  State<SpiceOverview> createState() => _SpiceOverviewState();
 }
 
-class _FirstPageState extends State<FirstPage> {
+class _SpiceOverviewState extends State<SpiceOverview> {
   @override
   void initState() {
     super.initState();
@@ -44,7 +45,11 @@ class _FirstPageState extends State<FirstPage> {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => WeightSelectionPage(spiceName: spiceName, imagePath: imagePath),
+          builder:
+              (context) => WeightSelectionPage(
+                spiceName: spiceName,
+                imagePath: imagePath,
+              ),
         ),
       );
     } else {

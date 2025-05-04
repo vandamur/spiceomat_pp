@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'first_page.dart';
+import 'spice_overview.dart';
 
 class GrindingDone extends StatefulWidget {
   final String spiceName;
@@ -34,11 +34,13 @@ class _GrindingDoneState extends State<GrindingDone> {
   }
 
   void _navigateToHome(BuildContext context) {
-    // Navigation zur Startseite (FirstPage)
-    Navigator.pushAndRemoveUntil(
+    // Navigator pop until FirstPage
+    // Navigator.popUntil(context, (route) => route.isFirst);
+
+    // Navigate to SpiceOverview via MaterialPageRoute
+    Navigator.pushReplacement(
       context,
-      MaterialPageRoute(builder: (context) => const FirstPage()),
-      (route) => false, // Entfernt alle vorherigen Routen vom Stack
+      MaterialPageRoute(builder: (context) => const SpiceOverview()),
     );
   }
 
@@ -52,7 +54,7 @@ class _GrindingDoneState extends State<GrindingDone> {
             end: Alignment.bottomCenter,
             colors: [
               Color(0xFFA5D6A7), // Helles Grün oben
-              Colors.white,      // Weiß unten
+              Colors.white, // Weiß unten
             ],
           ),
         ),
@@ -71,21 +73,18 @@ class _GrindingDoneState extends State<GrindingDone> {
                 ),
                 textAlign: TextAlign.center,
               ),
-              
+
               const SizedBox(height: 20),
-              
+
               // Subheadline
               const Text(
                 "Du kannst dein Gefäß jetzt entnehmen.",
-                style: TextStyle(
-                  fontSize: 20,
-                  color: Colors.black87,
-                ),
+                style: TextStyle(fontSize: 20, color: Colors.black87),
                 textAlign: TextAlign.center,
               ),
-              
+
               const SizedBox(height: 40),
-              
+
               // Icon/Bild
               Container(
                 padding: const EdgeInsets.all(20),
@@ -99,9 +98,9 @@ class _GrindingDoneState extends State<GrindingDone> {
                   color: Color(0xFF388E3C),
                 ),
               ),
-              
+
               const SizedBox(height: 30),
-              
+
               // Information zur gemahlenen Menge
               Text(
                 "Gemahlene Menge: ${widget.selectedAmount}",
@@ -111,16 +110,19 @@ class _GrindingDoneState extends State<GrindingDone> {
                 ),
                 textAlign: TextAlign.center,
               ),
-              
+
               const Spacer(),
-              
+
               // Button zur Startseite
               ElevatedButton(
                 onPressed: () => _navigateToHome(context),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF388E3C), // Dunkleres Grün
                   foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 40,
+                    vertical: 15,
+                  ),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(25),
                   ),
