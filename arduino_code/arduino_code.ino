@@ -185,7 +185,10 @@ void setupScale()
 {
   LoadCell.begin();
 
-  calibrationValue = -17618.00; // should not be hard coded, but calibrated every startup
+
+  //calibrationValue = -17492.40; // 5g calibrated
+  calibrationValue = -17900.50; // 10g calibrated
+  //calibrationValue = -17899.35 // 20g calibrated
 
   unsigned long stabilizingtime = 2000; // precision right after power-up can be improved by adding a few seconds of stabilizing time
   boolean _tare = true;                 // set this to false if you don't want tare to be performed in the next step
