@@ -65,6 +65,7 @@ class _GrindingDoneState extends State<GrindingDone> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
+              const SizedBox(height: 20),
               // Überschrift
               Text(
                 "Dein ${widget.spiceName} ist frisch gemahlen!",
@@ -85,7 +86,7 @@ class _GrindingDoneState extends State<GrindingDone> {
                 textAlign: TextAlign.center,
               ),
 
-              const SizedBox(height: 40),
+              const SizedBox(height: 20),
 
               // Icon/Bild
               Container(
@@ -96,12 +97,12 @@ class _GrindingDoneState extends State<GrindingDone> {
                 ),
                 child: const Icon(
                   Icons.check_circle_outline,
-                  size: 100,
+                  size: 70,
                   color: Color(0xFF388E3C),
                 ),
               ),
 
-              const SizedBox(height: 30),
+              const SizedBox(height: 20),
 
               // Information zur gemahlenen Menge
               Text(
@@ -112,9 +113,7 @@ class _GrindingDoneState extends State<GrindingDone> {
                 ),
                 textAlign: TextAlign.center,
               ),
-
-              const Spacer(),
-
+              const SizedBox(height: 20),
               // Button zur Startseite
               ElevatedButton(
                 onPressed: () => _navigateToHome(context),

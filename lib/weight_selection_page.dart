@@ -11,7 +11,7 @@ class WeightSelectionPage extends StatefulWidget {
     super.key,
     required this.spiceName,
     required this.imagePath,
-    this.availableQuantities = const [2, 3, 6, 9], // Standardwerte
+    this.availableQuantities = const [2, 4, 8, 12], // Standardwerte
   });
 
   @override
@@ -84,7 +84,7 @@ class _WeightSelectionPageState extends State<WeightSelectionPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(32.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
@@ -99,7 +99,6 @@ class _WeightSelectionPageState extends State<WeightSelectionPage> {
             ),
 
             const SizedBox(height: 10), // Abstand von 20 auf 10 reduziert
-
             // Hauptinhalt: Links Gewürz-Info, rechts Mengenauswahl
             Expanded(
               child: Row(
@@ -202,7 +201,7 @@ class _WeightSelectionPageState extends State<WeightSelectionPage> {
 
             // Buttons für Navigation (zurück zur Übersicht und weiter)
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 40.0),
+              padding: const EdgeInsets.all(32),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [

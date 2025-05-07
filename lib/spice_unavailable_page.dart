@@ -47,7 +47,7 @@ class _SpiceUnavailablePageState extends State<SpiceUnavailablePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(32.0),
         child: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -74,7 +74,7 @@ class _SpiceUnavailablePageState extends State<SpiceUnavailablePage> {
               const Text(
                 'Oops, das gewählte Gewürz ist momentan nicht verfügbar.',
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 18),
+                style: TextStyle(fontSize: 26),
               ),
               const SizedBox(height: 10),
               ElevatedButton(
@@ -84,10 +84,13 @@ class _SpiceUnavailablePageState extends State<SpiceUnavailablePage> {
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(
                     horizontal: 24,
-                    vertical: 12,
+                    vertical: 16,
                   ),
                 ),
-                child: const Text('zur Gewürz-Übersicht'),
+                child: const Text(
+                  'zur Gewürz-Übersicht',
+                  style: TextStyle(fontSize: 18),
+                ),
               ),
             ],
           ),

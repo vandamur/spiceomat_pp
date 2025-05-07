@@ -71,25 +71,20 @@ class _SpiceOverviewState extends State<SpiceOverview> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(32),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Padding(
-              padding: EdgeInsets.only(
-                bottom: 0.0,
-              ), // Abstand verringert (vorher 2.0)
-              child: Center(
-                child: Text(
-                  'Wähle dein Gewürz aus',
-                  style: TextStyle(
-                    fontSize: 34,
-                    fontWeight: FontWeight.bold,
-                    color: Color.fromARGB(255, 135, 17, 9),
-                  ),
+            Center(
+              child: Text(
+                'Wähle dein Gewürz aus',
+                style: TextStyle(
+                  fontSize: 32,
+                  fontWeight: FontWeight.bold,
+                  color: Color.fromARGB(255, 135, 17, 9),
                 ),
               ),
             ),
+
             Expanded(
               child: GridView.count(
                 crossAxisCount: 3,
@@ -128,16 +123,14 @@ class _SpiceOverviewState extends State<SpiceOverview> {
       onTap: () => _selectSpice(context, name, imagePath, isAvailable),
       child: Card(
         clipBehavior: Clip.antiAlias,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(15.0),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: <Widget>[
             Expanded(
               child: Container(
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(15.0),
+                  borderRadius: BorderRadius.circular(2.0),
                   color:
                       isAvailable
                           ? const Color.fromARGB(79, 43, 20, 0)
@@ -154,7 +147,7 @@ class _SpiceOverviewState extends State<SpiceOverview> {
               ),
             ),
             Container(
-              padding: const EdgeInsets.all(12.0),
+              padding: const EdgeInsets.all(14.0),
               color: Colors.white,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -163,6 +156,7 @@ class _SpiceOverviewState extends State<SpiceOverview> {
                     name,
                     style: const TextStyle(
                       fontSize: 18,
+
                       fontWeight: FontWeight.bold,
                     ),
                   ),
